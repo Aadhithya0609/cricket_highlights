@@ -14,11 +14,11 @@ def get_highlights():
     scores = []
 
     for player in batsmen:
-        excitement = player["sixes"] * 10 + player["fours"] * 5 + float(player["strkrate"]) / 10
-        scores.append((player["name"], excitement))
+        if player["sixes"] > 0 or player["fours"] > 0:
+            scores.append((player["name"], player["sixes"] * 10 + player["fours"] * 5))
 
 
-    scores.sort(key=lambda x: x[1], reverse=True)
+    
 
 
     
@@ -29,7 +29,7 @@ def get_highlights():
     for player1 in bowlers:
         excitement=player1["wickets"] *10
         wicket.append((player1["name"],excitement))
-    wicket.sort(key=lambda x:x[1],reverse=True)
+    
     
         
     moments=[]
@@ -40,7 +40,7 @@ def get_highlights():
         moments.append((i["batsmanname"], over, ball, i["runs"]))
 
     return {
-        "top_batsmen": scores[:3],
-        "top_bowlers": wicket[:2],
+        "top_batsmen": scores,
+        "top_bowlers": wicket,
         "wicket_moments": moments
     }
