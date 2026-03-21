@@ -60,4 +60,9 @@ def get_highlights():
         except Exception:
             continue
 
-    return {"top_batsmen": scores}
+    return {
+    "top_batsmen": [
+        {"name": name, "score": score}
+        for name, score in scores
+    ]
+}
