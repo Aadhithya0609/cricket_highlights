@@ -7,15 +7,13 @@ from database import get_batsmen
 app = FastAPI()
 
 # Redis setup (optional)
+redis_url = os.environ.get("REDIS_URL")
+
 try:
-    r = redis.Redis(
-        host=os.environ.get("REDIS_HOST", "localhost"),
-        port=int(os.environ.get("REDIS_PORT", 6379)),
-        db=0,
-        socket_connect_timeout=2
-    )
-    r.ping()
-except Exception:
+    r = redis.from_url(redis_url) if redis_url else None
+    if r:
+        r.ping()
+except:
     r = None
 
 
