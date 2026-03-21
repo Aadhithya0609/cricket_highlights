@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 import json
 from database import conn, get_batsmen
+import redis
+import json
+r=redis.Redis(host='localhost',port=6379,db=0)
 app = FastAPI()
 
 
 
 @app.get("/highlights")
 def get_highlights():
-    
-    
+    cached = r.get("batsmen")
+    if cached:
+        batsmen=json.loads(cached)
+    else:
+        batsmen=get_batsmen()
+        r.set("batsmen",json.dumps(batsmen))
+
     scores = []
-    batsmen = get_batsmen()
     print(batsmen)
     for player in batsmen:
         if player[1] > 0 or player[2] > 0:
