@@ -1,21 +1,22 @@
 from fastapi import FastAPI
 import json
-
+from database import conn, get_batsmen
 app = FastAPI()
 
-with open("sample.json") as f:
-    data = json.load(f)
+
 
 @app.get("/highlights")
 def get_highlights():
-    batsmen = data["scorecard"][0]["batsman"]
-    bowlers = data["scorecard"][0]["bowler"]
-    fow = data["scorecard"][0]["fow"]["fow"]
+    
+    
     scores = []
-
+    batsmen = get_batsmen()
+    print(batsmen)
     for player in batsmen:
-        if player["sixes"] > 0 or player["fours"] > 0:
-            scores.append((player["name"], player["sixes"] * 10 + player["fours"] * 5))
+        if player[1] > 0 or player[2] > 0:
+            scores.append((player[0], player[1] * 10 + player[2] * 5+ float(player[3]) / 10))
+        
+    
 
 
     
@@ -25,7 +26,7 @@ def get_highlights():
         
 
 
-    wicket=[]
+    ''' wicket=[]
     for player1 in bowlers:
         excitement=player1["wickets"] *10
         wicket.append((player1["name"],excitement))
@@ -43,4 +44,8 @@ def get_highlights():
         "top_batsmen": scores,
         "top_bowlers": wicket,
         "wicket_moments": moments
+    } '''
+    return {
+        "top_batsmen":scores
     }
+    
