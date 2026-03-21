@@ -1,58 +1,65 @@
 from fastapi import FastAPI
 import json
-from database import conn, get_batsmen
+import os
 import redis
-import json
-r=redis.Redis(host='localhost',port=6379,db=0)
+from database import get_batsmen
+
 app = FastAPI()
 
+# Redis setup (optional)
+try:
+    r = redis.Redis(
+        host=os.environ.get("REDIS_HOST", "localhost"),
+        port=int(os.environ.get("REDIS_PORT", 6379)),
+        db=0,
+        socket_connect_timeout=2
+    )
+    r.ping()
+except Exception:
+    r = None
+
+
+@app.get("/")
+def root():
+    return {"status": "ok"}
 
 
 @app.get("/highlights")
 def get_highlights():
-    cached = r.get("batsmen")
-    if cached:
-        batsmen=json.loads(cached)
-    else:
-        batsmen=get_batsmen()
-        r.set("batsmen",json.dumps(batsmen))
+    batsmen = None
+
+    if r:
+        try:
+            cached = r.get("batsmen")
+            if cached:
+                batsmen = json.loads(cached)
+        except Exception:
+            batsmen = None
+
+    if not batsmen:
+        try:
+            batsmen = get_batsmen()
+        except Exception as e:
+            return {"error": str(e)}
+
+        if r:
+            try:
+                r.set("batsmen", json.dumps(batsmen))
+            except Exception:
+                pass
 
     scores = []
-    print(batsmen)
     for player in batsmen:
-        if player[1] > 0 or player[2] > 0:
-            scores.append((player[0], player[1] * 10 + player[2] * 5+ float(player[3]) / 10))
-        
-    
+        try:
+            name = player[0]
+            sixes = int(player[1])
+            fours = int(player[2])
+            strike_rate = float(player[3])
 
+            if sixes > 0 or fours > 0:
+                excitement = sixes * 10 + fours * 5 + strike_rate / 10
+                scores.append((name, excitement))
+        except Exception:
+            continue
 
-    
-
-
-    
-        
-
-
-    ''' wicket=[]
-    for player1 in bowlers:
-        excitement=player1["wickets"] *10
-        wicket.append((player1["name"],excitement))
-    
-    
-        
-    moments=[]
-    for i in fow:
-        parts = str(i["overnbr"]).split(".")
-        over = parts[0]
-        ball = parts[1]
-        moments.append((i["batsmanname"], over, ball, i["runs"]))
-
-    return {
-        "top_batsmen": scores,
-        "top_bowlers": wicket,
-        "wicket_moments": moments
-    } '''
-    return {
-        "top_batsmen":scores
-    }
-    
+    return {"top_batsmen": scores}
