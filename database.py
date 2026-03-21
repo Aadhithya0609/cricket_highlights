@@ -1,4 +1,4 @@
-from tkinter import INSERT
+
 
 import psycopg2
 import json
